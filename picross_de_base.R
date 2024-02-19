@@ -1,8 +1,9 @@
+library(shiny)
+taille_initiale=5
 
-taille=10
-
-grille <- matrix(sample(c(1, 0), 100, replace=TRUE), nrow=taille)
-
+grille <- function(taille){
+  return(matrix(sample(c(1, 0), taille*taille, replace=TRUE), nrow=taille))
+}
 
 
 compte_grp_lin <- function(grille, num) {
@@ -66,3 +67,64 @@ vectlin <- function(grille) {
   return(res)
 }
 
+# UI de l'application
+ui <- fluidPage(
+  titlePanel("Picross"),
+  sidebarLayout(
+    sidebarPanel(
+      h3("Instructions"),
+      p("Cliquez sur les cases pour les remplir ou les vider."),
+      p("Essayez de résoudre le puzzle !"),
+      sliderInput("size", "Taille du plateau", min = 5, max = 15, value = taille_initiale)
+    ),
+    mainPanel(
+      uiOutput("grid"),
+      style = "width: 35%; height: 35%;overflow: auto;"
+    )
+  )
+)
+
+# Server de l'application
+server <- function(input, output, session) {
+  board <- reactiveVal(grille(taille_initiale))
+  
+  observeEvent(input$size, {
+    board(grille(input$size))
+  })
+  
+  output$grid <- renderUI({
+    grid <- board()
+    taille <- input$size
+    tags <- list()
+    for (i in 1:taille) {
+      for (j in 1:taille) {
+        id <- paste0("cell_", i, "_", j)
+        cell_value <- grid[i, j]
+        style <- if (cell_value == 1) "background-color: #333; color: white;" else ""
+        tags[[id]] <- actionButton(
+          id, 
+          "", 
+          style = paste0(
+            "width: 100%;",
+            "height: 0;",
+            "padding-top: 100%;",
+            style
+          )
+        )
+      }
+    }
+    div(
+      id = "grid-container",
+      style = paste0(
+        "display: grid;",
+        "grid-template-columns: repeat(", taille, ", 1fr);",
+        "grid-template-rows: repeat(", taille, ", 1fr);",
+        "grid-gap: 1px;"
+      ),
+      do.call(tagList, tags)
+    )
+  })
+}
+
+# Lancement de l'application
+shinyApp(ui = ui, server = server)

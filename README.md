@@ -1,4 +1,6 @@
-# Installation
+# Picross
+
+## Installation
 Installation of the Picross package can be done directly from github:
 
 
