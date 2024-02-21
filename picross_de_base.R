@@ -84,7 +84,6 @@ ui <- fluidPage(
   )
 )
 
-# Server de l'application
 server <- function(input, output, session) {
   board <- reactiveVal(grille(taille_initiale))
   
@@ -96,8 +95,8 @@ server <- function(input, output, session) {
     grid <- board()
     taille <- input$size
     tags <- list()
-    for (i in 1:taille) {
-      for (j in 1:taille) {
+    for (i in 1:taille) {  
+      for (j in 1:taille) {  
         id <- paste0("cell_", i, "_", j)
         cell_value <- grid[i, j]
         style <- if (cell_value == 1) "background-color: #333; color: white;" else ""
@@ -113,18 +112,49 @@ server <- function(input, output, session) {
         )
       }
     }
+    
+    num_col <- c("°", if (length(vectcol(grid)) == taille) {
+      lapply(1:taille, function(j) {
+        label <- paste(vectcol(grid)[[j]], collapse = "<br>")
+        div(HTML(label), style = "text-align: center;white-space: pre-wrap;")
+      })
+    } else {
+      rep("", taille)
+    })
+    
+    num_lin <- lapply(1:taille, function(i) {
+      label <- paste(vectlin(grid)[[i]], collapse = "")
+      div(HTML(label), style = "text-align: center;")
+    })
+    
     div(
-      id = "grid-container",
-      style = paste0(
-        "display: grid;",
-        "grid-template-columns: repeat(", taille, ", 1fr);",
-        "grid-template-rows: repeat(", taille, ", 1fr);",
-        "grid-gap: 1px;"
+      div(
+        style = "display: flex; justify-content: space-between;",
+        do.call(tagList, num_col)
       ),
-      do.call(tagList, tags)
+      div(
+        style = "display: grid; grid-template-columns: auto 1fr; grid-gap: 1px; align-items: center;",
+        div(
+          style = "text-align: center;",
+          do.call(tagList, num_lin)
+        ),
+        div(
+          id = "grid-container",
+          style = paste0(
+            "display: grid;",
+            "grid-template-columns: repeat(", taille, ", 1fr);",
+            "grid-template-rows: repeat(", taille, ", 1fr);",
+            "grid-gap: 1px;"
+          ),
+          do.call(tagList, tags)
+        )
+      )
     )
   })
 }
 
+
+
 # Lancement de l'application
 shinyApp(ui = ui, server = server)
+
