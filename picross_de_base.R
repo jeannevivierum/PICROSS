@@ -90,7 +90,8 @@ ui <- fluidPage(
       h3("Instructions"),
       p("Cliquez sur les cases pour les remplir ou les vider."),
       p("Essayez de résoudre le puzzle !"),
-      sliderInput("size", "Taille du plateau", min = 5, max = 15, value = taille_initiale)
+      sliderInput("size", "Taille du plateau", min = 5, max = 15, value = taille_initiale),
+      actionButton("go", "Rejouer")
     ),
     mainPanel(
       uiOutput("grid"),
@@ -169,7 +170,98 @@ server <- function(input, output, session) {
 }
 
 
+# UI de l'application
+ui <- fluidPage(
+  titlePanel("Picross"),
+  sidebarLayout(
+    sidebarPanel(
+      h3("Instructions"),
+      p("Cliquez sur les cases pour les remplir ou les vider."),
+      p("Essayez de résoudre le puzzle !"),
+      sliderInput("size", "Taille du plateau", min = 5, max = 15, value = taille_initiale),
+      actionButton("go", "Rejouer")
+    ),
+    mainPanel(
+      uiOutput("grid"),
+      style = "width: 35%; height: 35%;overflow: auto;"
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  board <- reactiveVal(grille(taille_initiale))
+  
+  observeEvent(input$size, {
+    board(grille(input$size))
+  })
+  
+  observeEvent(input$go, {
+    board(grille(input$size))
+  })
+  
+  output$grid <- renderUI({
+    grid <- board()
+    taille <- input$size
+    tags <- list()
+    for (i in 1:taille) {  
+      for (j in 1:taille) {  
+        id <- paste0("cell_", i, "_", j)
+        cell_value <- grid[i, j]
+        style <- if (cell_value == 1) "background-color: #333; color: white;" else ""
+        tags[[id]] <- actionButton(
+          id, 
+          "", 
+          style = paste0(
+            "width: 100%;",
+            "height: 0;",
+            "padding-top: 100%;",
+            style
+          )
+        )
+      }
+    }
+    
+    num_col <- c("°", if (length(vectcol(grid)) == taille) {
+      lapply(1:taille, function(j) {
+        label <- paste(vectcol(grid)[[j]], collapse = "<br>")
+        div(HTML(label), style = "text-align: center;white-space: pre-wrap;")
+      })
+    } else {
+      rep("", taille)
+    })
+    
+    num_lin <- lapply(1:taille, function(i) {
+      label <- paste(vectlin(grid)[[i]], collapse = "")
+      div(HTML(label), style = "text-align: center;")
+    })
+    
+    div(
+      div(
+        style = "display: flex; justify-content: space-between;",
+        do.call(tagList, num_col)
+      ),
+      div(
+        style = "display: grid; grid-template-columns: auto 1fr; grid-gap: 1px; align-items: center;",
+        div(
+          style = "text-align: center;",
+          do.call(tagList, num_lin)
+        ),
+        div(
+          id = "grid-container",
+          style = paste0(
+            "display: grid;",
+            "grid-template-columns: repeat(", taille, ", 1fr);",
+            "grid-template-rows: repeat(", taille, ", 1fr);",
+            "grid-gap: 1px;"
+          ),
+          do.call(tagList, tags)
+        )
+      )
+    )
+  })
+}
+
+
 
 # Lancement de l'application
 shinyApp(ui = ui, server = server)
-
