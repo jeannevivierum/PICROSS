@@ -1,10 +1,18 @@
 library(shiny)
 taille_initiale=5
 
+
+#grille(taille): fonction génère une grille aléatoire de taille taille x taille 
+#avec des valeurs aléatoires qui sont des 0 ou des 1 
+
 grille <- function(taille){
   return(matrix(sample(c(1, 0), taille*taille, replace=TRUE), nrow=taille))
 }
 
+
+#compte_grp_lin(grille, num): fonction qui compte les groupes de 1 consécutifs 
+#dans la ligne num de la grille. Elle renvoie un vecteur avec le nombre de 1 
+#consécutifs pour chaque groupe.
 
 compte_grp_lin <- function(grille, num) {
   taille <- nrow(grille) 
@@ -27,6 +35,10 @@ compte_grp_lin <- function(grille, num) {
   return(count_grp)
 }
 
+
+#compte_grp_col(grille, num): fonction qui compte les groupes de 1 consécutifs 
+#dans la colonne num de la grille. (idem que celle d'avant mais pour les col)
+
 compte_grp_col <- function(grille, num) {
   taille <- ncol(grille) 
   count_grp <- c() #vecteur renvoyé
@@ -48,7 +60,9 @@ compte_grp_col <- function(grille, num) {
   return(count_grp)
 }
 
-
+#vectcol(grille): fonction applique compte_grp_col à chaque colonne de la grille
+#et renvoie une liste de vecteurs où chaque élément représente les groupes de 1 
+#consécutifs dans une colonne.
 vectcol <- function(grille) {
   nb_colonnes <- ncol(grille)
   res <- vector("list", length = nb_colonnes)
@@ -57,7 +71,7 @@ vectcol <- function(grille) {
   }
   return(res)
 }
-
+#vectlin(grille): même chose mais ligne et pas colonne
 vectlin <- function(grille) {
   nb_lin <- nrow(grille)
   res <- vector("list", length = nb_lin)
@@ -66,6 +80,7 @@ vectlin <- function(grille) {
   }
   return(res)
 }
+
 
 # UI de l'application
 ui <- fluidPage(
