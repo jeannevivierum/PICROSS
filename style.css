@@ -1,4 +1,21 @@
-.btn {
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
+.sidebar-content {
+            background-color: #f8f9fa; /* Couleur de fond */
+            padding: 20px; /* Espacement intérieur */
+            border-radius: 10px; /* Bord arrondi */
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1); /* Ombre */
+          }
+          .sidebar h3 {
+            color: #333; /* Couleur du texte des titres */
+            margin-top: 0; /* Espacement en haut */
+          }
+          .sidebar p {
+            color: #555; /* Couleur du texte des paragraphes */
+            margin-bottom: 10px; /* Espacement en bas */
+          }
+          .sidebar input[type='range'] {
+            margin-top: 10px; /* Espacement en haut du slider */
+          }
+          .sidebar .btn {
+            width: 100%; /* Largeur des boutons */
+            margin-bottom: 5px; /* Espacement en bas des boutons */
+          }

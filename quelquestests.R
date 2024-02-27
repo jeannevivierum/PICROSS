@@ -101,10 +101,6 @@ server <- function(input, output, session) {
     board(grille_aleatoire(input$size))
   })
   
-  observeEvent(input$go, {
-    board(grille_aleatoire(input$size))
-  })
-  
   output$grid <- renderUI({
     grid <- board()
     taille <- input$size
@@ -119,7 +115,7 @@ server <- function(input, output, session) {
     })
     
     num_lin <- lapply(1:taille, function(i) {
-      label <- paste(vectlin(grid)[[i]], collapse = "")
+      label <- paste(vectlin(grid)[[i]], collapse = " ")
       div(HTML(label), style = "text-align: center;")
     })
     
