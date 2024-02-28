@@ -155,18 +155,17 @@ ui <- page_sidebar(
   horloge
 )
 
-
 server <- function(input, output, session) {
   board <- reactiveVal(grille(taille_initiale))
   
   observeEvent(input$go, {
     board(grille(input$size))
     session$sendCustomMessage(type = "startTimer", message = list())
-    })
+  })
   
   observeEvent(input$size, {
     board(grille(input$size))
-   })
+  })
   
   instructions_state <- reactiveValues(show = FALSE)
   
@@ -185,75 +184,66 @@ server <- function(input, output, session) {
   })
   
   observe({
-  output$grid <- renderUI({
     grid <- board()
     taille <- input$size
-    tags <- list()
-    for (i in 1:taille+1) {  
-      for (j in 1:taille+1) {  
-        id <- paste0("cell_", i, "_", j)
-        cell_value <- grid[i, j]
-      }
-    }
+    num_col <- c("°", if (length(vectcol(grid)) == taille) {
+      lapply(1:taille, function(j) {
+        label <- paste(compte_grp_col(grid, j), collapse = "<br>")
+        div(HTML(label), style = "text-align: center;white-space: pre-wrap;")
+      })
+    } else {
+      rep("", taille)
+    })
     
-#    num_col <- c("°", if (length(vectcol(grid)) == taille) {
-#      lapply(1:taille, function(j) {
-#        label <- paste(vectcol(grid)[[j]], collapse = "<br>")
-#        div(HTML(label), style = "text-align: center;white-space: pre-wrap;")
-#      })
-#    } else {
-#      rep("", taille)
-#    })
+    num_lin <- lapply(1:taille, function(i) {
+      label <- paste(compte_grp_lin(grid, i), collapse = "")
+      div(HTML(label), style = "text-align: center; padding-top: 50%;")
+    })
     
-#    num_lin <- lapply(1:taille, function(i) {
-#      label <- paste(vectlin(grid)[[i]], collapse = "")
-#      div(HTML(label), style = "text-align: center;")
-#    })
-    
-    
-    div(
+    output$grid <- renderUI({
       div(
-        style = "display: flex; justify-content: space-between;",
-        do.call(tagList, num_col)
-      ),
-      div(
-        style = "display: grid; grid-template-columns: auto 1fr; grid-gap: 1px; align-items: center;",
         div(
-          style = "text-align: center;",
-          do.call(tagList, num_lin)
+          style = "display: flex; justify-content: space-between;",
+          do.call(tagList, num_col)
         ),
         div(
-          id = "grid-container",
-          style = paste0(
-            "display: grid;",
-            "grid-template-columns: repeat(", taille, ", 1fr);",
-            "grid-template-rows: repeat(", taille, ", 1fr);",
-            "grid-gap: 1px;"
+          style = "display: grid; grid-template-columns: auto 1fr; grid-gap: 1px; align-items: center;",
+          div(
+            style = "text-align: center;",
+            do.call(tagList, num_lin)
           ),
-          lapply(1:taille, function(i) {
-            lapply(1:taille, function(j) {
-              id <- paste0("cell_", i, "_", j)
-              cell_value <- grid[i, j]
-              style <- if ((cell_value == 1)|| (cell_value == 0)) "background-color: white; border: 1px solid #333;" else ""
-              actionButton(
-                id, 
-                "", 
-                style = paste0(
-                  "width: 100%;",
-                  "height: 0;",
-                  "padding-top: 100%;",
-                  style
-                ),
-                class = "grid-cell"
-              )
+          div(
+            id = "grid-container",
+            style = paste0(
+              "display: grid;",
+              "grid-template-columns: repeat(", taille, ", 1fr);",
+              "grid-template-rows: repeat(", taille, ", 1fr);",
+              "grid-gap: 1px;"
+            ),
+            lapply(1:taille, function(i) {
+              lapply(1:taille, function(j) {
+                id <- paste0("cell_", i, "_", j)
+                cell_value <- grid[i, j]
+                style <- if ((cell_value == 1)|| (cell_value == 0)) "background-color: white; border: 1px solid #333;" else ""
+                actionButton(
+                  id, 
+                  "", 
+                  style = paste0(
+                    "width: 100%;",
+                    "height: 0;",
+                    "padding-top: 100%;",
+                    style
+                  ),
+                  class = "grid-cell"
+                )
+              })
             })
-          })
+          )
         )
       )
-    )
-  })})
+    })
+  })
 }
-
 
 
 # Lancement de l'application
