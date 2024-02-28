@@ -177,7 +177,8 @@ server <- function(input, output, session) {
     if (instructions_state$show) {
       tagList(
         p("Cliquez sur les cases pour les remplir ou les vider en respectant les conditions."),
-        p("Les nombres présents à gauche et en haut de la grille indiquent le nombre de cases à noircir sur la ligne et la colonne correspondante"),
+        p("Les nombres en haut de la grille indiquent le nombre de cases à noircir sur la colonne correspondante."),
+        p("Les nombres à gauche de la grille indiquent le nombre de cases à noircir sur la ligne correspondante."),
         p("Essayez de résoudre le puzzle !")
       )
     }
@@ -186,64 +187,66 @@ server <- function(input, output, session) {
   observe({
     grid <- board()
     taille <- input$size
-    num_col <- c("°", if (length(vectcol(grid)) == taille) {
-      lapply(1:taille, function(j) {
-        label <- paste(compte_grp_col(grid, j), collapse = "<br>")
-        div(HTML(label), style = "text-align: center;white-space: pre-wrap;")
-      })
-    } else {
-      rep("", taille)
+    
+    num_col <- lapply(1:taille, function(j) {
+      label <- paste(compte_grp_col(grid, j), collapse = "<br>")
+      div(HTML(label), style = paste0("text-align: center; white-space: pre-wrap; grid-column: ", j, ";"))
     })
     
     num_lin <- lapply(1:taille, function(i) {
-      label <- paste(compte_grp_lin(grid, i), collapse = "")
-      div(HTML(label), style = "text-align: center; padding-top: 50%;")
+      label <- paste(paste0(compte_grp_lin(grid, i)," "), collapse = "")
+      div(HTML(label), style = "text-align: center;")
     })
     
     output$grid <- renderUI({
       div(
+        style = "display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, auto)) 1fr; grid-gap: 1px;",
         div(
-          style = "display: flex; justify-content: space-between;",
+          style = "display: grid; grid-template-rows: repeat(auto-fit, minmax(40px, auto)); grid-column: 2; justify-content: space-between;",
           do.call(tagList, num_col)
         ),
         div(
-          style = "display: grid; grid-template-columns: auto 1fr; grid-gap: 1px; align-items: center;",
-          div(
-            style = "text-align: center;",
-            do.call(tagList, num_lin)
+          style = "display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, auto)) 1fr; grid-gap: 1px; grid-column: 1; grid-row: 2; align-items: end;",
+          do.call(tagList, num_lin)
+        ),
+        div(
+          id = "grid-container",
+          style = paste0(
+            "grid-column: 2; grid-row: 2; display: grid;",
+            "grid-template-columns: repeat(", taille, ", 1fr);",
+            "grid-template-rows: repeat(", taille, ", 1fr);",
+            "grid-gap: 1px;"
           ),
-          div(
-            id = "grid-container",
-            style = paste0(
-              "display: grid;",
-              "grid-template-columns: repeat(", taille, ", 1fr);",
-              "grid-template-rows: repeat(", taille, ", 1fr);",
-              "grid-gap: 1px;"
-            ),
-            lapply(1:taille, function(i) {
-              lapply(1:taille, function(j) {
-                id <- paste0("cell_", i, "_", j)
-                cell_value <- grid[i, j]
-                style <- if ((cell_value == 1)|| (cell_value == 0)) "background-color: white; border: 1px solid #333;" else ""
-                actionButton(
-                  id, 
-                  "", 
-                  style = paste0(
-                    "width: 100%;",
-                    "height: 0;",
-                    "padding-top: 100%;",
-                    style
-                  ),
-                  class = "grid-cell"
-                )
-              })
+          lapply(1:taille, function(i) {
+            lapply(1:taille, function(j) {
+              id <- paste0("cell_", i, "_", j)
+              cell_value <- grid[i, j]
+              style <- if ((cell_value == 1) || (cell_value == 0)) "background-color: white; border: 1px solid #333;" else ""
+              actionButton(
+                id, 
+                "", 
+                style = paste0(
+                  "width: 100%;",
+                  "height: 0;",
+                  "padding-top: 100%;",
+                  style
+                ),
+                class = "grid-cell"
+              )
             })
-          )
+          })
         )
       )
     })
   })
+  
+  
 }
+
+
+
+
+
 
 
 # Lancement de l'application
