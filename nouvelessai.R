@@ -89,20 +89,45 @@ detectclick <- tags$head(
   tags$script(
     HTML(
       '
-        $(document).on("click", ".grid-cell", function() {
-          var cell = $(this);
-          if (!cell.hasClass("black")) {
-            cell.addClass("black");
-            cell.css("background-color", "#333");
-          } else {
-            cell.removeClass("black");
-            cell.css("background-color", "white");
-          }
-        });
-        '
+      var cellStates = {};
+      
+      $(document).on("click", ".grid-cell", function() {
+        var cell = $(this);
+        var cellId = cell.attr("id");
+        if (!cell.hasClass("black")) {
+          cell.addClass("black");
+          cellStates[cellId] = 1; // Marquer la cellule comme noire
+          cell.css("background-color", "#333")
+        } else {
+          cell.removeClass("black");
+          cellStates[cellId] = 0; // Marquer la cellule comme blanche
+          cell.css("background-color", "white");
+        }
+        var cellStatesJSON = JSON.stringify(cellStates);
+        Shiny.setInputValue("cell_states", cellStatesJSON);
+      });
+      
+      $(document).on("click", ".action-button", function() {
+        var buttonId = $(this).attr("id");
+        Shiny.onInputChange(buttonId, buttonId);
+      });
+      '
     )
   )
 )
+  
+# Définissez la fonction verif dans R pour vérifier la grille
+verif <- function(cellStates){
+  # Convertir les données JavaScript en un objet R
+  cellStates <- jsonlite::fromJSON(cellStates)
+  # Vérifier chaque cellule
+  for (cellId in names(cellStates)) {
+    if (cellStates[cellId] == 1) {
+      return(FALSE) # Puzzle incorrect si une cellule est noire
+    }
+  }
+  return(TRUE) # Puzzle correct sinon
+}
 
 horloge <- tags$script('
   var timerStarted = false; // Variable to track if timer has started
@@ -167,6 +192,8 @@ server <- function(input, output, session) {
     board(grille(input$size))
   })
   
+  
+  
   instructions_state <- reactiveValues(show = FALSE)
   
   observeEvent(input$toggle_instructions, {
@@ -181,6 +208,22 @@ server <- function(input, output, session) {
         p("Les nombres à gauche de la grille indiquent le nombre de cases à noircir sur la ligne correspondante."),
         p("Essayez de résoudre le puzzle !")
       )
+    }
+  })
+  
+  observeEvent(input$verif, {
+    # Appeler la fonction verif lorsque l'état des cellules est mis à jour
+    verif_result <- verif(input$cell_states)
+    if (verif_result) {
+      showModal(modalDialog(
+        title = "Résultat de la vérification",
+        "Le puzzle est correct !"
+      ))
+    } else {
+      showModal(modalDialog(
+        title = "Résultat de la vérification",
+        "Le puzzle contient des erreurs."
+      ))
     }
   })
   
@@ -242,12 +285,6 @@ server <- function(input, output, session) {
   
   
 }
-
-
-
-
-
-
 
 # Lancement de l'application
 shinyApp(ui = ui, server = server)
