@@ -92,29 +92,39 @@ detectclick <- tags$head(
       var cellStates = {};
       
       $(document).on("click", ".grid-cell", function() {
-        var cell = $(this);
-        var cellId = cell.attr("id");
+  var cell = $(this);
+  var cellId = cell.attr("id");
+  
+
+      if (isValidCellId(cellId)) {
         if (!cell.hasClass("black")) {
           cell.addClass("black");
-          cellStates[cellId] = 1; // Marquer la cellule comme noire
+          cellStates[cellId] = 1; 
           cell.css("background-color", "#333")
         } else {
           cell.removeClass("black");
-          cellStates[cellId] = 0; // Marquer la cellule comme blanche
+          cellStates[cellId] = 0; 
           cell.css("background-color", "white");
         }
         var cellStatesJSON = JSON.stringify(cellStates);
         Shiny.setInputValue("cell_states", cellStatesJSON);
-      });
-      
-      $(document).on("click", ".action-button", function() {
-        var buttonId = $(this).attr("id");
-        Shiny.onInputChange(buttonId, buttonId);
-      });
+        
+        
+    Shiny.setInputValue("clicked_cell_id", cellId);
+  } else {
+    console.error("ID de cellule non valide : " + cellId);
+  }
+});
+
+function isValidCellId(cellId) {
+  return (cellId !== undefined && cellId !== null && cellId !== "");
+}
       '
     )
   )
 )
+
+
   
 # Définissez la fonction verif dans R pour vérifier la grille
 verif <- function(cellStates){
@@ -172,7 +182,8 @@ ui <- page_sidebar(
       sliderInput("size", "Taille du plateau", min = 5, max = 15, value = taille_initiale),
       actionButton("go", "Rejouer"),
       actionButton("verif", "Vérifier"),
-      card(p("Temps:",id = "clock", "00:00:00"))
+      card(p("Temps:",id = "clock", "00:00:00")),
+      card(textOutput("clicked_cell_id_output"))
     ) 
   ),
   detectclick,
@@ -209,6 +220,13 @@ server <- function(input, output, session) {
         p("Essayez de résoudre le puzzle !")
       )
     }
+  })
+  
+  observeEvent(input$clicked_cell_id, {
+    # Mettre à jour l'élément de sortie pour afficher l'ID de la cellule
+    output$clicked_cell_id_output <- renderText({
+      input$clicked_cell_id
+    })
   })
   
   observeEvent(input$verif, {
