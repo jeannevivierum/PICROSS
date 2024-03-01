@@ -239,7 +239,7 @@ server <- function(input, output, session) {
       ))
     } else {
       showModal(modalDialog(
-        title = "Résultat de la vérification",
+        title = "Résultat de la vérification:",
         "Le puzzle contient des erreurs."
       ))
     }
@@ -263,11 +263,11 @@ server <- function(input, output, session) {
       div(
         style = "display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, auto)) 1fr; grid-gap: 1px;",
         div(
-          style = "display: grid; grid-template-rows: repeat(auto-fit, minmax(40px, auto)); grid-column: 2; justify-content: space-between;",
+          style = "display: grid; grid-template-rows: repeat(auto-fit, minmax(40px, auto)); grid-column: 2; justify-content: space-around;",
           do.call(tagList, num_col)
         ),
         div(
-          style = "display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, auto)) 1fr; grid-gap: 1px; grid-column: 1; grid-row: 2; align-items: end;",
+          style = "display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, auto)) 1fr; grid-gap: 1px; grid-column: 1; grid-row: 2; align-items: center;",
           do.call(tagList, num_lin)
         ),
         div(
