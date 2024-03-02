@@ -2,6 +2,7 @@ library(shiny)
 library(shinythemes)
 library(bslib)
 library(bsicons)
+library(jsonlite)
 
 taille_initiale=5
 
@@ -13,6 +14,77 @@ grille <- function(taille){
 }
 
 
+horloge <- tags$script('
+  var timerStarted = false; // Variable to track if timer has started
+  var startTime = 0; // Variable to store start time
+  
+  Shiny.addCustomMessageHandler("startTimer", function(message) {
+    if (!timerStarted) { // Start timer only if not started already
+      startTime = new Date().getTime();
+      timerStarted = true;
+      
+      function updateClock() {
+        var currentTime = new Date().getTime();
+        var timeDiff = currentTime - startTime;
+        var seconds = Math.floor((timeDiff / 1000) % 60);
+        var minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
+        var hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
+        $("#clock").text(
+          "Temps: " +
+          ("0" + hours).slice(-2) + ":" + 
+          ("0" + minutes).slice(-2) + ":" + 
+          ("0" + seconds).slice(-2)
+        );
+      }
+      setInterval(updateClock, 1000);
+    }
+  });
+  
+  $(document).on("click", "#go", function() {
+    // Reset timer variables when "Rejouer" button is clicked
+    timerStarted = false;
+    startTime = 0;
+  });
+')
+
+detectclick <- tags$head(
+  tags$script(
+    HTML(
+      '
+      var cellStates = {};
+      
+      $(document).on("click", ".grid-cell", function() {
+  var cell = $(this);
+  var cellId = cell.attr("id");
+  
+
+      if (isValidCellId(cellId)) {
+        if (!cell.hasClass("black")) {
+          cell.addClass("black");
+          cellStates[cellId] = 1; 
+          cell.css("background-color", "#333")
+        } else {
+          cell.removeClass("black");
+          cellStates[cellId] = 0; 
+          cell.css("background-color", "white");
+        }
+        var cellStatesJSON = JSON.stringify(cellStates);
+        Shiny.setInputValue("cell_states", cellStatesJSON);
+        
+        
+    Shiny.setInputValue("clicked_cell_id", cellId);
+  } else {
+    console.error("ID de cellule non valide : " + cellId);
+  }
+});
+
+function isValidCellId(cellId) {
+  return (cellId !== undefined && cellId !== null && cellId !== "");
+}
+      '
+    )
+  )
+)
 #compte_grp_lin(grille, num): fonction qui compte les groupes de 1 consécutifs 
 #dans la ligne num de la grille. Elle renvoie un vecteur avec le nombre de 1 
 #consécutifs pour chaque groupe.
@@ -85,92 +157,23 @@ vectlin <- function(grille) {
 }
 
 
-detectclick <- tags$head(
-  tags$script(
-    HTML(
-      '
-      var cellStates = {};
-      
-      $(document).on("click", ".grid-cell", function() {
-  var cell = $(this);
-  var cellId = cell.attr("id");
-  
 
-      if (isValidCellId(cellId)) {
-        if (!cell.hasClass("black")) {
-          cell.addClass("black");
-          cellStates[cellId] = 1; 
-          cell.css("background-color", "#333")
-        } else {
-          cell.removeClass("black");
-          cellStates[cellId] = 0; 
-          cell.css("background-color", "white");
-        }
-        var cellStatesJSON = JSON.stringify(cellStates);
-        Shiny.setInputValue("cell_states", cellStatesJSON);
-        
-        
-    Shiny.setInputValue("clicked_cell_id", cellId);
-  } else {
-    console.error("ID de cellule non valide : " + cellId);
+
+verif <- function(cellStates, grille) {
+  # Convertir les données JSON en un objet R
+  cell_states <- jsonlite::fromJSON(cellStates)
+  matrice <- matrix(0, nrow = nrow(grille), ncol = ncol(grille))
+  # Remplir la matrice avec les valeurs des cellStates
+  for (cellId in names(cell_states)) {
+    # Extraire les coordonnées de cellId
+    coord <- as.numeric(strsplit(cellId, "_")[[1]][2:3])
+    matrice[[coord[1],coord[2]]] <- unlist(cell_states[cellId])[1]
   }
-});
-
-function isValidCellId(cellId) {
-  return (cellId !== undefined && cellId !== null && cellId !== "");
-}
-      '
-    )
-  )
-)
-
-
   
-# Définissez la fonction verif dans R pour vérifier la grille
-verif <- function(cellStates){
-  # Convertir les données JavaScript en un objet R
-  cellStates <- jsonlite::fromJSON(cellStates)
-  # Vérifier chaque cellule
-  for (cellId in names(cellStates)) {
-    if (cellStates[cellId] == 1) {
-      return(FALSE) # Puzzle incorrect si une cellule est noire
-    }
-  }
-  return(TRUE) # Puzzle correct sinon
+  return(identical(vectlin(matrice),vectlin(grille))&&identical(vectcol(matrice),vectcol(grille)))
 }
 
-horloge <- tags$script('
-  var timerStarted = false; // Variable to track if timer has started
-  var startTime = 0; // Variable to store start time
-  
-  Shiny.addCustomMessageHandler("startTimer", function(message) {
-    if (!timerStarted) { // Start timer only if not started already
-      startTime = new Date().getTime();
-      timerStarted = true;
-      
-      function updateClock() {
-        var currentTime = new Date().getTime();
-        var timeDiff = currentTime - startTime;
-        var seconds = Math.floor((timeDiff / 1000) % 60);
-        var minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
-        var hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
-        $("#clock").text(
-          "Temps: " +
-          ("0" + hours).slice(-2) + ":" + 
-          ("0" + minutes).slice(-2) + ":" + 
-          ("0" + seconds).slice(-2)
-        );
-      }
-      setInterval(updateClock, 1000);
-    }
-  });
-  
-  $(document).on("click", "#go", function() {
-    // Reset timer variables when "Rejouer" button is clicked
-    timerStarted = false;
-    startTime = 0;
-  });
-')
+
 
 # UI de l'application
 ui <- page_sidebar(
@@ -230,8 +233,9 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$verif, {
+    grid<- board()
     # Appeler la fonction verif lorsque l'état des cellules est mis à jour
-    verif_result <- verif(input$cell_states)
+    verif_result <- verif(input$cell_states,grid)
     if (verif_result) {
       showModal(modalDialog(
         title = "Résultat de la vérification",
