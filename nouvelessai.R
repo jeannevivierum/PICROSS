@@ -62,11 +62,11 @@ detectclick <- tags$head(
         if (!cell.hasClass("black")) {
           cell.addClass("black");
           cellStates[cellId] = 1; 
-          cell.css("background-color", "#333")
+          cell.css("background-color", "#661951")
         } else {
           cell.removeClass("black");
           cellStates[cellId] = 0; 
-          cell.css("background-color", "white");
+          cell.css("background-color", "#ECBADE");
         }
         var cellStatesJSON = JSON.stringify(cellStates);
         Shiny.setInputValue("cell_states", cellStatesJSON);
@@ -177,6 +177,8 @@ verif <- function(cellStates, grille) {
 
 # UI de l'application
 ui <- page_sidebar(
+  theme = bs_theme(bootswatch= "minty", primary = "#661951", secondary = "#ECBADE", 
+         success = "#661951",`enable-shadows` = TRUE, spacer = "0.5rem"),
   title = "Picross",
   sidebar = sidebar(
     list(
@@ -185,7 +187,7 @@ ui <- page_sidebar(
       sliderInput("size", "Taille du plateau", min = 5, max = 15, value = taille_initiale),
       actionButton("go", "Rejouer"),
       actionButton("verif", "Vérifier"),
-      card(p("Temps:",id = "clock", "00:00:00")),
+      card(p("Temps:",id = "clock", "00:00:00"),class="text-success"),
       card(textOutput("clicked_cell_id_output"))
     ) 
   ),
@@ -196,7 +198,6 @@ ui <- page_sidebar(
 
 server <- function(input, output, session) {
   board <- reactiveVal(grille(taille_initiale))
-  
   observeEvent(input$go, {
     board(grille(input$size))
     session$sendCustomMessage(type = "startTimer", message = list())
@@ -259,7 +260,7 @@ server <- function(input, output, session) {
     })
     
     num_lin <- lapply(1:taille, function(i) {
-      label <- paste(paste0(compte_grp_lin(grid, i)," "), collapse = "")
+      label <- paste(paste0(" ",compte_grp_lin(grid, i)," "), collapse = " ")
       div(HTML(label), style = "text-align: center;")
     })
     
