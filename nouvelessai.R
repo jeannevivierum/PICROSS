@@ -185,7 +185,7 @@ ui <- page_sidebar(
       actionButton("toggle_instructions", "Instructions"),
       uiOutput("instructions"),
       sliderInput("size", "Taille du plateau", min = 5, max = 15, value = taille_initiale),
-      actionButton("go", "Rejouer"),
+      actionButton("go", "Jouer"),
       actionButton("verif", "Vérifier"),
       card(p("Temps:",id = "clock", "00:00:00"),class="text-success"),
       card(textOutput("clicked_cell_id_output"))
@@ -201,56 +201,7 @@ server <- function(input, output, session) {
   observeEvent(input$go, {
     board(grille(input$size))
     session$sendCustomMessage(type = "startTimer", message = list())
-  })
-  
-  observeEvent(input$size, {
-    board(grille(input$size))
-  })
-  
-  
-  
-  instructions_state <- reactiveValues(show = FALSE)
-  
-  observeEvent(input$toggle_instructions, {
-    instructions_state$show <- !instructions_state$show
-  })
-  
-  output$instructions <- renderUI({
-    if (instructions_state$show) {
-      tagList(
-        p("Cliquez sur les cases pour les remplir ou les vider en respectant les conditions."),
-        p("Les nombres en haut de la grille indiquent le nombre de cases à noircir sur la colonne correspondante."),
-        p("Les nombres à gauche de la grille indiquent le nombre de cases à noircir sur la ligne correspondante."),
-        p("Essayez de résoudre le puzzle !")
-      )
-    }
-  })
-  
-  observeEvent(input$clicked_cell_id, {
-    # Mettre à jour l'élément de sortie pour afficher l'ID de la cellule
-    output$clicked_cell_id_output <- renderText({
-      input$clicked_cell_id
-    })
-  })
-  
-  observeEvent(input$verif, {
-    grid<- board()
-    # Appeler la fonction verif lorsque l'état des cellules est mis à jour
-    verif_result <- verif(input$cell_states,grid)
-    if (verif_result) {
-      showModal(modalDialog(
-        title = "Résultat de la vérification",
-        "Le puzzle est correct !"
-      ))
-    } else {
-      showModal(modalDialog(
-        title = "Résultat de la vérification:",
-        "Le puzzle contient des erreurs."
-      ))
-    }
-  })
-  
-  observe({
+    updateTextInput(session, "cell_states", value = "")
     grid <- board()
     taille <- input$size
     
@@ -305,7 +256,48 @@ server <- function(input, output, session) {
       )
     })
   })
+
+  instructions_state <- reactiveValues(show = FALSE)
   
+  observeEvent(input$toggle_instructions, {
+    instructions_state$show <- !instructions_state$show
+  })
+  
+  output$instructions <- renderUI({
+    if (instructions_state$show) {
+      tagList(
+        p("Cliquez sur les cases pour les remplir ou les vider en respectant les conditions."),
+        p("Les nombres en haut de la grille indiquent le nombre de cases à noircir sur la colonne correspondante."),
+        p("Les nombres à gauche de la grille indiquent le nombre de cases à noircir sur la ligne correspondante."),
+        p("Essayez de résoudre le puzzle !")
+      )
+    }
+  })
+  
+  observeEvent(input$clicked_cell_id, {
+    # Mettre à jour l'élément de sortie pour afficher l'ID de la cellule
+    output$clicked_cell_id_output <- renderText({
+      input$clicked_cell_id
+    })
+  })
+  
+  observeEvent(input$verif, {
+    grid<- board()
+    # Appeler la fonction verif lorsque l'état des cellules est mis à jour
+    verif_result <- verif(input$cell_states,grid)
+    if (verif_result) {
+      showModal(modalDialog(
+        title = "Résultat de la vérification",
+        "Le puzzle est correct !"
+      ))
+      cell_states <- NULL
+    } else {
+      showModal(modalDialog(
+        title = "Résultat de la vérification:",
+        "Le puzzle contient des erreurs."
+      ))
+    }
+  })
   
 }
 
