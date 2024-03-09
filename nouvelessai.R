@@ -3,6 +3,7 @@ library(shinythemes)
 library(bslib)
 library(bsicons)
 library(jsonlite)
+library(shinyjs)
 
 taille_initiale=5
 
@@ -41,7 +42,6 @@ horloge <- tags$script('
   });
   
   $(document).on("click", "#go", function() {
-    // Reset timer variables when "Rejouer" button is clicked
     timerStarted = false;
     startTime = 0;
   });
@@ -81,6 +81,13 @@ detectclick <- tags$head(
 function isValidCellId(cellId) {
   return (cellId !== undefined && cellId !== null && cellId !== "");
 }
+function clearCellStates() {
+        cellStates = {};
+        Shiny.setInputValue("cell_states", "{}");
+}
+$(document).on("click", "#go", function() {
+        clearCellStates();
+      });
       '
     )
   )
@@ -188,7 +195,7 @@ ui <- page_sidebar(
       actionButton("go", "Jouer"),
       actionButton("verif", "Vérifier"),
       card(p("Temps:",id = "clock", "00:00:00"),class="text-success"),
-      card(textOutput("clicked_cell_id_output"))
+      card(uiOutput("num_tentatives"))
     ) 
   ),
   detectclick,
@@ -197,11 +204,15 @@ ui <- page_sidebar(
 )
 
 server <- function(input, output, session) {
+  
   board <- reactiveVal(grille(taille_initiale))
+  tentatives <- reactiveVal(0)
+  
   observeEvent(input$go, {
+    tentatives <- reactiveVal(0)
     board(grille(input$size))
     session$sendCustomMessage(type = "startTimer", message = list())
-    updateTextInput(session, "cell_states", value = "")
+      
     grid <- board()
     taille <- input$size
     
@@ -274,29 +285,36 @@ server <- function(input, output, session) {
     }
   })
   
-  observeEvent(input$clicked_cell_id, {
-    # Mettre à jour l'élément de sortie pour afficher l'ID de la cellule
-    output$clicked_cell_id_output <- renderText({
-      input$clicked_cell_id
-    })
-  })
-  
   observeEvent(input$verif, {
+    tentatives(tentatives() + 1)
     grid<- board()
     # Appeler la fonction verif lorsque l'état des cellules est mis à jour
     verif_result <- verif(input$cell_states,grid)
     if (verif_result) {
       showModal(modalDialog(
         title = "Résultat de la vérification",
-        "Le puzzle est correct !"
+        HTML(paste("Le puzzle est correct ! <br> Nombre de tentatives: ", tentatives())),
+        footer = tagList(
+          actionButton("closeModal", "Super!")
+        )
       ))
-      cell_states <- NULL
     } else {
       showModal(modalDialog(
         title = "Résultat de la vérification:",
-        "Le puzzle contient des erreurs."
+        HTML(paste("Le puzzle contient des erreurs. <br> Nombre de tentatives: ", tentatives())),
+        footer = tagList(
+          actionButton("closeModal", "Continuer")
+        )
       ))
     }
+  })
+  
+  output$num_tentatives <- renderText({
+    paste("Nombre de tentatives:", tentatives())
+  })
+  
+  observeEvent(input$closeModal, {
+    removeModal()
   })
   
 }
