@@ -1,0 +1,18 @@
+Package: PicrossDV
+Type: Package
+Title: PicrossDV
+Version: 1.0.0
+Authors@R: 'Jeanne Vivier <vivierjeanne1@gmail.com> [aut, cre], Pierre Dias <pierredias51470@gmail.com> [aut]'
+Description: Package de jeu picross avec Shiny et R.
+License: use_mit_license()
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE) 
+Imports:
+  shiny,
+  shinythemes,
+  bslib,
+  bsicons,
+  jsonlite,
+  shinyjs
+RoxygenNote: 7.3.1

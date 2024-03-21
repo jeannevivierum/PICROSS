@@ -1,0 +1,106 @@
+#' Fonction pour générer une grille aléatoire
+#'
+#' @param taille La taille de la grille
+#' @return Une grille aléatoire
+#' @export
+grille <- function(taille) {
+  return(matrix(sample(c(1, 0), taille*taille, replace=TRUE), nrow=taille))
+}
+
+#' Fonction pour compter les groupes de 1 consécutifs dans une ligne de la grille
+#'
+#' @param grille La grille de jeu
+#' @param num Le numéro de ligne
+#' @return Un vecteur avec le nombre de groupes de 1 consécutifs
+#' @export
+compte_grp_lin <- function(grille, num) {
+  taille <- nrow(grille) 
+  count_grp <- c() #vecteur renvoyé
+  count <- 0
+  for (i in 1:taille) { 
+    if (grille[num, i] == 1) { #on compte le nombre de 1 qui se suivent
+      count <- count + 1
+    } else { #si 0, on ajoute le compte a la liste
+      if (count > 0) {
+        count_grp <- c(count_grp, count)
+        count <- 0
+      }
+    }
+  }
+  if (count > 0) {
+    count_grp <- c(count_grp, count)
+  }
+  
+  return(count_grp)
+}
+
+#' Fonction pour compter les groupes de 1 consécutifs dans une colonne de la grille
+#'
+#' @param grille La grille de jeu
+#' @param num Le numéro de colonne
+#' @return Un vecteur avec le nombre de groupes de 1 consécutifs
+#' @export
+compte_grp_col <- function(grille, num) {
+  taille <- ncol(grille) 
+  count_grp <- c() #vecteur renvoyé
+  count <- 0
+  for (i in 1:taille) { 
+    if (grille[i, num] == 1) { #on compte le nombre de 1 qui se suivent
+      count <- count + 1
+    } else { #si 0, on ajoute le compte a la liste
+      if (count > 0) {
+        count_grp <- c(count_grp, count)
+        count <- 0
+      }
+    }
+  }
+  if (count > 0) {
+    count_grp <- c(count_grp, count)
+  }
+  
+  return(count_grp)
+}
+
+#' Fonction applique compte_grp_col à chaque colonne de la grille.
+#'
+#' @param grille La grille de jeu
+#' @return Une liste de vecteurs où chaque élément représente les groupes de 1 consécutifs dans une colonne.
+#' @export
+vectcol <- function(grille) {
+  nb_colonnes <- ncol(grille)
+  res <- vector("list", length = nb_colonnes)
+  for (i in 1:nb_colonnes) {
+    res[[i]] <- compte_grp_col(grille, i)
+  }
+  return(res)
+}
+
+#' Fonction applique compte_grp_lin à chaque ligne de la grille.
+#'
+#' @param grille La grille de jeu
+#' @return Une liste de vecteurs où chaque élément représente les groupes de 1 consécutifs dans une ligne.
+#' @export
+vectlin <- function(grille) {
+  nb_lin <- nrow(grille)
+  res <- vector("list", length = nb_lin)
+  for (i in 1:nb_lin) {
+    res[[i]] <- compte_grp_lin(grille, i)
+  }
+  return(res)
+}
+
+#' Fonction pour vérifier si la grille est résolue correctement, fonctionne si la grille n'est pas a solution unique.
+#'
+#' @param cellStates L'état des cellules
+#' @param grille La grille de jeu
+#' @return TRUE si la grille est correctement résolue, sinon FALSE
+#' @export
+verif <- function(cellStates, grille) {
+  cell_states <- jsonlite::fromJSON(cellStates)
+  matrice <- matrix(0, nrow = nrow(grille), ncol = ncol(grille))
+  for (cellId in names(cell_states)) {
+    coord <- as.numeric(strsplit(cellId, "_")[[1]][2:3])
+    matrice[[coord[1],coord[2]]] <- unlist(cell_states[cellId])[1]
+  }
+  return(identical(vectlin(matrice),vectlin(grille))&&identical(vectcol(matrice),vectcol(grille)))
+}

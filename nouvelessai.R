@@ -5,13 +5,19 @@ library(bsicons)
 library(jsonlite)
 library(shinyjs)
 
-taille_initiale=5
-
 #grille(taille): fonction génère une grille aléatoire de taille taille x taille 
 #avec des valeurs aléatoires qui sont des 0 ou des 1 
 
-grille <- function(taille){
-  return(matrix(sample(c(1, 0), taille*taille, replace=TRUE), nrow=taille))
+#"Facile", "Moyen", "Difficile", "Très difficile"
+difficulty <- function(str){
+  if(str=="Facile"){return(0.3)}
+  else if (str=="Moyen"){return(0.4)}
+  else if (str=="Difficile"){return(0.45)}
+  else if (str=="Très difficile"){return(0.5)}
+}
+
+grille <- function(taille,difficulte){
+  return(matrix(sample(c(0, 1), taille * taille, replace = TRUE, prob = c(difficulte,1-difficulte)), nrow = taille))
 }
 
 
@@ -88,6 +94,21 @@ function clearCellStates() {
 $(document).on("click", "#go", function() {
         clearCellStates();
       });
+      $(document).ready(function() {
+  $(".difficulty-button").click(function() {
+    var buttonId = $(this).attr("id");
+    var buttonValue = $(this).attr("value");
+    if (buttonValue == "TRUE") {
+      $(this).attr("value", "FALSE");
+      $(this).removeClass("active");
+    } else {
+      $(".difficulty-button").attr("value", "FALSE");
+      $(".difficulty-button").removeClass("active");
+      $(this).attr("value", "TRUE");
+      $(this).addClass("active");
+    }
+  });
+});
       '
     )
   )
@@ -191,7 +212,12 @@ ui <- page_sidebar(
     list(
       actionButton("toggle_instructions", "Instructions"),
       uiOutput("instructions"),
-      sliderInput("size", "Taille du plateau", min = 5, max = 15, value = taille_initiale),
+      sliderInput("size", "Taille du plateau", min = 5, max = 15, value = 5),
+      card(
+        radioButtons("difficulte", card_header("Difficulté"),
+                     choices = c("Facile", "Moyen", "Difficile", "Très difficile"),
+                     selected = "Facile")
+      ),
       actionButton("go", "Jouer"),
       actionButton("verif", "Vérifier"),
       card(p("Temps:",id = "clock", "00:00:00"),class="text-success"),
@@ -205,12 +231,13 @@ ui <- page_sidebar(
 
 server <- function(input, output, session) {
   
-  board <- reactiveVal(grille(taille_initiale))
+  board <- reactiveVal(grille(5,0.3))
   tentatives <- reactiveVal(0)
   
   observeEvent(input$go, {
-    tentatives <- reactiveVal(0)
-    board(grille(input$size))
+    tentatives(tentatives() - tentatives())
+    diffi<-difficulty(input$difficulte)
+    board(grille(input$size,diffi))
     session$sendCustomMessage(type = "startTimer", message = list())
       
     grid <- board()
