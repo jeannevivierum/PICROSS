@@ -7,10 +7,10 @@
 #' @examples
 #' difficulty("Facile")
 difficulty <- function(str){
-  if(str=="Facile"){return(0.3)}
+  if(str=="Facile"){return(0.35)}
   else if (str=="Moyen"){return(0.4)}
-  else if (str=="Difficile"){return(0.45)}
-  else if (str=="Très difficile"){return(0.5)}
+  else if (str=="Difficile"){return(0.5)}
+  else if (str=="Très difficile"){return(0.55)}
 }
 
 #' Generer une grille aleatoire
