@@ -9,11 +9,18 @@ Installation of the Picross package can be done directly from github:
 install.packages("remotes")
 remotes::install_github("jeannevivierum/PICROSS/PicrossDV")
 ```
-Choose all packages (`1`)
+Or
 ```
-play_pic()
+install.packages("devtools")
+devtools::install_github("jeannevivierum/PICROSS/PicrossDV")
 ```
 
+```
+PicrossDV::play_pic()
+```
+
+## Description
+Bringing Picross to Life with R and Shiny!
 Have fun !
 
 ## Authors
